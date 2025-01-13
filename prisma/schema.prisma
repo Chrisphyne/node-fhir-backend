@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Region {
+  id         Int        @id @default(autoincrement())
+  name       String     @unique
+  created_at DateTime   @default(now())
+  Counties   Counties[]
+}
+
+model Counties {
+  id          Int         @id @default(autoincrement())
+  name        String      @unique
+  code        String?
+  region      Region?     @relation(fields: [regionId], references: [id])
+  created_at  DateTime    @default(now())
+  SubCounties SubCounty[]
+  regionId    Int?
+}
+
+model SubCounty {
+  id         Int        @id @default(autoincrement())
+  name       String     @unique
+  countyId   Int
+  county     Counties   @relation(fields: [countyId], references: [id])
+  created_at DateTime   @default(now())
+  Division   Division[]
+}
+
+model Division {
+  id          Int        @id @default(autoincrement())
+  name        String
+  sub_county  SubCounty  @relation(fields: [subCountyId], references: [id])
+  subCountyId Int
+  Location    Location[]
+}
+
+model Location {
+  id         Int       @id @default(autoincrement())
+  name       String    @unique
+  division   Division  @relation(fields: [divisionId], references: [id])
+  created_at DateTime  @default(now())
+  Village    Village[]
+  divisionId Int
+  User       User[]
+}
+
+model Village {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  location    Location @relation(fields: [locationId], references: [id])
+  locationId  Int
+  created_at  DateTime @default(now())
+}
+
+model IPRS_Person {
+  id                Int      @id @default(autoincrement())
+  id_no             String?  @unique
+  passport_no       String?
+  first_name        String
+  middle_name       String?
+  last_name         String
+  gender            String
+  nationality       String
+  county_of_birth   String?
+  district_of_birth String?
+  division_of_birth String?
+  location_of_birth String?
+  date_of_birth     DateTime
+  mug_shot          String? // Assuming the mug_shot field stores a file path
+  User              User[]
+}
+
+model User {
+  id              Int               @id @default(autoincrement())
+  name            String
+  email           String
+  telephone       String            @unique
+  password        String
+  iprs            IPRS_Person      @relation(fields: [iPRS_PersonId], references: [id])
+  iPRS_PersonId   Int
+  location        Location?          @relation(fields: [locationId], references: [id])
+  profile_pic     String?
+  ModuleData      ModuleData[]
+  sub_module_data sub_module_data[]
+  locationId      Int?
+  created_at      DateTime          @default(now())
+}
+
+model Modules {
+  id          Int          @id @default(autoincrement())
+  name        String
+  description String?
+  bf          Boolean      @default(false)
+  repetition  Boolean      @default(false)
+  fields      Json?
+  createdAt   DateTime     @default(now())
+  ModuleData  ModuleData[]
+  sub_modules sub_module[]
+}
+
+model sub_module {
+  id              Int               @id @default(autoincrement())
+  name            String
+  description     String?
+  bf              Boolean           @default(false)
+  repetition      Boolean           @default(false)
+  fields          Json?
+  module          Modules           @relation(fields: [modulesId], references: [id])
+  createdAt       DateTime          @default(now())
+  modulesId       Int
+  sub_module_data sub_module_data[]
+}
+
+model ModuleData {
+  id             Int      @id @default(autoincrement())
+  moduleId       Int
+  submissionDate DateTime @default(now())
+  attachments    String[] // Store multiple file paths
+  formData       Json
+  user           User     @relation(fields: [userId], references: [id])
+  Modules        Modules  @relation(fields: [moduleId], references: [id])
+  userId         Int
+}
+
+model sub_module_data {
+  id             Int        @id @default(autoincrement())
+  sub_moduleId   Int
+  submissionDate DateTime   @default(now())
+  attachments    String[] // Store multiple file paths
+  formData       Json
+  user           User       @relation(fields: [userId], references: [id])
+  userId         Int
+  sub_module     sub_module @relation(fields: [sub_moduleId], references: [id])
+}
