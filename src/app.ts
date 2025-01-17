@@ -41,6 +41,7 @@ import SubCountiesRouter from './routes/v1/sub_counties';
 import { DivisionRouter } from './routes/v1/division';
 import VillageRouter from './routes/v1/village';
 import locationRouter from './routes/v1/location';
+import DesignationRouter from './routes/v1/designation';
 // import { ApplicationsDataRouter } from './routes/v1/applications';
 
 app.use(bodyParser.json({ limit: '50mb', type: 'application/json' }));
@@ -105,6 +106,7 @@ app.use('/api/v1/sub_counties', SubCountiesRouter);
 app.use('/api/v1/division', DivisionRouter);
 app.use('/api/v1/location', locationRouter);
 app.use('/api/v1/village', VillageRouter);
+app.use('/api/v1/designation', DesignationRouter);
 
 
 app.get('/uploads/:filename', (req, res) => {

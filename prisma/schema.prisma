@@ -15,13 +15,14 @@ model Region {
 }
 
 model Counties {
-  id          Int         @id @default(autoincrement())
-  name        String      @unique
+  id          Int           @id @default(autoincrement())
+  name        String        @unique
   code        String?
-  region      Region?     @relation(fields: [regionId], references: [id])
-  created_at  DateTime    @default(now())
+  region      Region?       @relation(fields: [regionId], references: [id])
+  created_at  DateTime      @default(now())
   SubCounties SubCounty[]
   regionId    Int?
+  Designation Designation[]
 }
 
 model SubCounty {
@@ -84,14 +85,31 @@ model User {
   email           String
   telephone       String            @unique
   password        String
-  iprs            IPRS_Person      @relation(fields: [iPRS_PersonId], references: [id])
+  iprs            IPRS_Person       @relation(fields: [iPRS_PersonId], references: [id])
   iPRS_PersonId   Int
-  location        Location?          @relation(fields: [locationId], references: [id])
+  location        Location?         @relation(fields: [locationId], references: [id])
   profile_pic     String?
   ModuleData      ModuleData[]
   sub_module_data sub_module_data[]
   locationId      Int?
   created_at      DateTime          @default(now())
+  Designation     Designation[]
+}
+
+enum Role {
+  Admin
+  Manager
+  User
+}
+
+model Designation {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userId], references: [id])
+  role       Role
+  county     Counties @relation(fields: [countiesId], references: [id])
+  created_at DateTime @default(now())
+  userId     Int
+  countiesId Int
 }
 
 model Modules {
