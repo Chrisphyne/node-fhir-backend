@@ -49,7 +49,7 @@ model Location {
   created_at DateTime  @default(now())
   Village    Village[]
   divisionId Int
-  User       User[]
+  Officer       Officer[]
 }
 
 model Village {
@@ -76,10 +76,10 @@ model IPRS_Person {
   location_of_birth String?
   date_of_birth     DateTime
   mug_shot          String? // Assuming the mug_shot field stores a file path
-  User              User[]
+  Officer           Officer[]
 }
 
-model User {
+model Officer {
   id              Int               @id @default(autoincrement())
   name            String
   email           String
@@ -96,20 +96,23 @@ model User {
   Designation     Designation[]
 }
 
-enum Role {
-  Admin
-  Manager
-  User
+model Role {
+  id          Int           @id @default(autoincrement())
+  name        String
+  description String?
+  created_at  DateTime      @default(now())
+  Designation Designation[]
 }
 
 model Designation {
   id         Int      @id @default(autoincrement())
-  user       User     @relation(fields: [userId], references: [id])
-  role       Role
+  officer       Officer     @relation(fields: [officerId], references: [id])
+  role       Role     @relation(fields: [roleId], references: [id])
   county     Counties @relation(fields: [countiesId], references: [id])
   created_at DateTime @default(now())
-  userId     Int
+  officerId     Int
   countiesId Int
+  roleId     Int
 }
 
 model Modules {
@@ -143,9 +146,9 @@ model ModuleData {
   submissionDate DateTime @default(now())
   attachments    String[] // Store multiple file paths
   formData       Json
-  user           User     @relation(fields: [userId], references: [id])
+  officer           Officer     @relation(fields: [officerId], references: [id])
   Modules        Modules  @relation(fields: [moduleId], references: [id])
-  userId         Int
+  officerId         Int
 }
 
 model sub_module_data {
@@ -154,7 +157,7 @@ model sub_module_data {
   submissionDate DateTime   @default(now())
   attachments    String[] // Store multiple file paths
   formData       Json
-  user           User       @relation(fields: [userId], references: [id])
-  userId         Int
+  officer           Officer     @relation(fields: [officerId], references: [id])
+  officerId         Int
   sub_module     sub_module @relation(fields: [sub_moduleId], references: [id])
 }
