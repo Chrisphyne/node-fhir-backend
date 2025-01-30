@@ -43,27 +43,36 @@ model Division {
 }
 
 model Location {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  division   Division @relation(fields: [divisionId], references: [id])
+  created_at DateTime @default(now())
+  divisionId Int
+  Ward       Ward[]
+}
+
+model Ward {
   id         Int       @id @default(autoincrement())
   name       String    @unique
-  division   Division  @relation(fields: [divisionId], references: [id])
+  location   Location  @relation(fields: [locationId], references: [id])
   created_at DateTime  @default(now())
+  locationId Int
+  Officer    Officer[]
   Village    Village[]
-  divisionId Int
-  Officer       Officer[]
 }
 
 model Village {
   id          Int      @id @default(autoincrement())
   name        String   @unique
   description String?
-  location    Location @relation(fields: [locationId], references: [id])
-  locationId  Int
+  ward        Ward     @relation(fields: [wardId], references: [id])
+  wardId      Int
   created_at  DateTime @default(now())
 }
 
 model IPRS_Person {
-  id                Int      @id @default(autoincrement())
-  id_no             String?  @unique
+  id                Int       @id @default(autoincrement())
+  id_no             String?   @unique
   passport_no       String?
   first_name        String
   middle_name       String?
@@ -80,20 +89,31 @@ model IPRS_Person {
 }
 
 model Officer {
-  id              Int               @id @default(autoincrement())
-  name            String
-  email           String
-  telephone       String            @unique
-  password        String
-  iprs            IPRS_Person       @relation(fields: [iPRS_PersonId], references: [id])
-  iPRS_PersonId   Int
-  location        Location?         @relation(fields: [locationId], references: [id])
-  profile_pic     String?
-  ModuleData      ModuleData[]
-  sub_module_data sub_module_data[]
-  locationId      Int?
-  created_at      DateTime          @default(now())
-  Designation     Designation[]
+  id                     Int               @id @default(autoincrement())
+  name                   String
+  service_number         String            @unique
+  password               String
+  rank                   String
+  badge_no               String
+  date_of_birth          String
+  gender                 String
+  contact_info           String
+  emergency_contact_info String
+  iprs                   IPRS_Person       @relation(fields: [iPRS_PersonId], references: [id])
+  iPRS_PersonId          Int
+  created_at             DateTime          @default(now())
+  Designation            Designation[]
+  Ward                   Ward?             @relation(fields: [wardId], references: [id])
+  wardId                 Int?
+  Service                Service[]
+}
+
+model Service {
+  id          Int      @id @default(autoincrement())
+  officer     Officer  @relation(fields: [officerId], references: [id])
+  department  String
+  current_assignment String
+  officerId   Int
 }
 
 model Role {
@@ -106,58 +126,12 @@ model Role {
 
 model Designation {
   id         Int      @id @default(autoincrement())
-  officer       Officer     @relation(fields: [officerId], references: [id])
+  officer    Officer  @relation(fields: [officerId], references: [id])
   role       Role     @relation(fields: [roleId], references: [id])
   county     Counties @relation(fields: [countiesId], references: [id])
   created_at DateTime @default(now())
-  officerId     Int
+  officerId  Int
   countiesId Int
   roleId     Int
 }
 
-model Modules {
-  id          Int          @id @default(autoincrement())
-  name        String
-  description String?
-  bf          Boolean      @default(false)
-  repetition  Boolean      @default(false)
-  fields      Json?
-  createdAt   DateTime     @default(now())
-  ModuleData  ModuleData[]
-  sub_modules sub_module[]
-}
-
-model sub_module {
-  id              Int               @id @default(autoincrement())
-  name            String
-  description     String?
-  bf              Boolean           @default(false)
-  repetition      Boolean           @default(false)
-  fields          Json?
-  module          Modules           @relation(fields: [modulesId], references: [id])
-  createdAt       DateTime          @default(now())
-  modulesId       Int
-  sub_module_data sub_module_data[]
-}
-
-model ModuleData {
-  id             Int      @id @default(autoincrement())
-  moduleId       Int
-  submissionDate DateTime @default(now())
-  attachments    String[] // Store multiple file paths
-  formData       Json
-  officer           Officer     @relation(fields: [officerId], references: [id])
-  Modules        Modules  @relation(fields: [moduleId], references: [id])
-  officerId         Int
-}
-
-model sub_module_data {
-  id             Int        @id @default(autoincrement())
-  sub_moduleId   Int
-  submissionDate DateTime   @default(now())
-  attachments    String[] // Store multiple file paths
-  formData       Json
-  officer           Officer     @relation(fields: [officerId], references: [id])
-  officerId         Int
-  sub_module     sub_module @relation(fields: [sub_moduleId], references: [id])
-}

@@ -29,10 +29,8 @@ import { home } from './routes/home';
 import path from 'path';
 
 import iprsPersonRouter from './routes/v1/search_iprs';
-import { ModuleRouter } from './routes/v1/module';
 import { ModuleDataRouter } from './routes/v1/module_data';
 import UserRouter from './routes/v1/user';
-import { SubModulesRouter } from './routes/v1/sub_module';
 import { SubModuleDataRouter } from './routes/v1/sub_module_data';
 import { ApplicationsDataRouter } from './routes/v1/applications';
 import { RegionRouter } from './routes/v1/region';
@@ -95,10 +93,6 @@ export const io = new Server(server, {
 app.use('/', home);
 app.use('/api/v1/iprsPersons', iprsPersonRouter);
 app.use('/api/v1/user', UserRouter);
-app.use('/api/v1/module', ModuleRouter);
-app.use('/api/v1/sub_module', SubModulesRouter);
-app.use('/api/v1/sub_module_data', SubModuleDataRouter);
-app.use('/api/v1/module_data', ModuleDataRouter);
 app.use('/api/v1/applications', ApplicationsDataRouter);
 app.use('/api/v1/region', RegionRouter);
 app.use('/api/v1/counties', CountiesRouter);

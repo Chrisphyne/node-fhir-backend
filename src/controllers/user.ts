@@ -8,11 +8,11 @@ import bcrypt from "bcrypt";
 
 
 export const createUser = async (req: Request, res: Response) => {
-  const { email, telephone, password, id_no } = req.body;
+  const { name, id_no, service_number, password, rank, badge_no, date_of_birth, gender, contact_info, emergency_contact_info } = req.body;
 
   try {
     // Validate input
-    if (!email || !telephone || !password || !id_no) {
+    if (!name || !id_no || !service_number || !password || !rank || !badge_no || !date_of_birth || !gender || !contact_info || !emergency_contact_info) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -29,11 +29,16 @@ export const createUser = async (req: Request, res: Response) => {
     const fullName = `${iprsPerson.first_name} ${iprsPerson.middle_name || ""} ${iprsPerson.last_name}`.trim();
 
     // Create user without locationId
-    const newUser = await prisma.user.create({
+    const newUser = await prisma.officer.create({
       data: {
         name: fullName,
-        email,
-        telephone,
+        rank,
+        badge_no,
+        date_of_birth,
+        gender,
+        contact_info,
+        emergency_contact_info,
+        service_number,
         password: hashedPassword,
         iPRS_PersonId: iprsPerson.id,
         created_at: new Date(),
@@ -62,7 +67,7 @@ export const createUser = async (req: Request, res: Response) => {
 // Read All Users
 export const getAllUsers = async (req: Request, res: Response) => {
     try {
-        const users = await prisma.user.findMany({
+        const users = await prisma.officer.findMany({
             include: { iprs: true }, // Include IPRS_Person relationship
             orderBy: { id: 'desc' },
         });
@@ -82,7 +87,7 @@ export const getUserById = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     try {
-        const user = await prisma.user.findUnique({
+        const user = await prisma.officer.findUnique({
             where: { id: parseInt(id) },
             include: { iprs: true },
         });
@@ -104,11 +109,11 @@ export const getUserById = async (req: Request, res: Response) => {
 // Update User
 export const updateUser = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { name, email, telephone, iprs } = req.body;
+  const { name, rank, badge_no, date_of_birth, gender, contact_info, emergency_contact_info } = req.body;
 
   try {
     // Check if the user exists
-    const existingUser = await prisma.user.findUnique({ where: { id: parseInt(id) } });
+    const existingUser = await prisma.officer.findUnique({ where: { id: parseInt(id) } });
 
     if (!existingUser) {
       return res.status(404).json({ message: "User not found" });
@@ -126,11 +131,16 @@ export const updateUser = async (req: Request, res: Response) => {
     // }
 
     // Update User
-    const updatedUser = await prisma.user.update({
+    const updatedUser = await prisma.officer.update({
       where: { id: parseInt(id) },
       data: {
-        email,
-        telephone,
+        name,
+        rank,
+        badge_no,
+        date_of_birth,
+        gender,
+        contact_info,
+        emergency_contact_info,
       },
     });
 
@@ -151,7 +161,7 @@ export const deleteUser = async (req: Request, res: Response) => {
 
   try {
     // Check if the user exists
-    const existingUser = await prisma.user.findUnique({ where: { id: parseInt(id) } });
+    const existingUser = await prisma.officer.findUnique({ where: { id: parseInt(id) } });
 
     if (!existingUser) {
       return res.status(404).json({ message: "User not found" });
@@ -165,7 +175,7 @@ export const deleteUser = async (req: Request, res: Response) => {
     }
 
     // Delete User
-    await prisma.user.delete({ where: { id: parseInt(id) } });
+    await prisma.officer.delete({ where: { id: parseInt(id) } });
 
     res.status(204).send(); // No content response
   } catch (error) {
@@ -177,21 +187,21 @@ export const deleteUser = async (req: Request, res: Response) => {
 
 //  login user
 export const loginUser = async (req: Request, res: Response) => {
-  const { telephone, password } = req.body;
+  const { service_number, password } = req.body;
 
   console.log("====================================");
-  console.log("Login Attempt:", { telephone });
+  console.log("Login Attempt:", { service_number });
   console.log("====================================");
 
   try {
     // Validate input
-    if (!telephone || !password) {
+    if (!service_number || !password) {
       return res.status(400).json({ message: "Telephone and password are required" });
     }
 
     // Check if user exists
-    const user = await prisma.user.findUnique({
-      where: { telephone },
+    const user = await prisma.officer.findUnique({
+      where: { service_number },
     });
 
     if (!user) {
@@ -205,12 +215,11 @@ export const loginUser = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Check if profile is incomplete
-    const profileIncomplete = !user.locationId || !user.profile_pic;
+   
 
     // Generate JWT token
     const validJwt = jwt.sign(
-      { id: user.id, telephone: user.telephone },
+      { id: user.id, service_number: user.service_number },
       JWTSecret,
       { expiresIn: "1d" } // Token expires in 1 day
     );
@@ -220,8 +229,7 @@ export const loginUser = async (req: Request, res: Response) => {
       message: "Login successful",
       data: {
         token: validJwt,
-        user,
-        profileIncomplete, // Indicates if the user needs to complete their profile
+        user, // Indicates if the user needs to complete their profile
       },
     });
   } catch (error) {
@@ -230,43 +238,4 @@ export const loginUser = async (req: Request, res: Response) => {
   }
 };
 
-// complete profile
 
-export const completeProfile = async (req: Request, res: Response) => {
-  const { id } = req.user; // Extracted from JWT
-  const { locationId } = req.body; // Extract other fields from the body
-  const file = req.file as Express.Multer.File; // Access the uploaded file (assuming single file upload)
-
-  try {
-    if (!locationId || !file) {
-      return res.status(400).json({ message: "Location ID and profile picture are required" });
-    }
-
-    const locationExists = await prisma.location.findUnique({
-      where: { id: Number(locationId) },
-    });
-
-    if (!locationExists) {
-      return res.status(404).json({ message: "Invalid location ID" });
-    }
-
-    // Construct the file path for the profile picture
-    const profilePicPath = `uploads/${file.filename}`;
-
-    const updatedUser = await prisma.user.update({
-      where: { id: Number(id) },
-      data: {
-        locationId: Number(locationId), // Ensure locationId is a number
-        profile_pic: profilePicPath, // Save the file path
-      },
-    });
-
-    res.status(200).json({
-      message: "Profile updated successfully",
-      data: updatedUser,
-    });
-  } catch (error) {
-    console.error("Error updating profile:", error);
-    res.status(500).json({ message: "An error occurred while updating the profile" });
-  }
-};
