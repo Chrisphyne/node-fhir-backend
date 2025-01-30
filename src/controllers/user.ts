@@ -196,7 +196,7 @@ export const loginUser = async (req: Request, res: Response) => {
   try {
     // Validate input
     if (!service_number || !password) {
-      return res.status(400).json({ message: "Telephone and password are required" });
+      return res.status(400).json({ message: "service_number  and password are required" });
     }
 
     // Check if user exists
