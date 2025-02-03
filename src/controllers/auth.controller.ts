@@ -7,17 +7,17 @@ import bcrypt from 'bcrypt';
 export class AuthController {
   static async login(req: Request, res: Response) {
     try {
-      const { email, password ,telephone} = req.body;
+      const { service_number, password } = req.body;
       
-      const user = await prisma.user.findUnique({
-        where: { telephone }
+      const officer = await prisma.officer.findUnique({
+        where: { service_number }
       });
 
-      if (!user) {
+      if (!officer) {
         return res.status(401).json({ message: 'Invalid credentials' });
       }
 
-      const isValidPassword = await bcrypt.compare(password, user.password);
+      const isValidPassword = await bcrypt.compare(password, officer.password);
       
       if (!isValidPassword) {
         return res.status(401).json({ message: 'Invalid credentials' });
@@ -25,8 +25,8 @@ export class AuthController {
 
       const token = jwt.sign(
         {
-          sub: user.id,
-          email: user.email,
+          sub: officer.id,
+          service_number: officer.service_number,
         //   role: user.role
         },
         jwtConfig.secret,
@@ -39,7 +39,7 @@ export class AuthController {
 
       return res.json({
         token,
-        user:user
+        officer:officer
       });
     } catch (error) {
       return res.status(500).json({ message: 'Internal server error' });
@@ -47,6 +47,6 @@ export class AuthController {
   }
 
   static async validateToken(req: Request, res: Response) {
-    return res.json({ user: req.user });
+    return res.json({ officer: req.officer });
   }
 } 

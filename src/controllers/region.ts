@@ -36,7 +36,7 @@ export const getAllRegions = async (req: Request, res: Response) => {
                                     include:{
                                         Location: {
                                             include:{
-                                                Village: true
+                                                Ward: true
                                             }
                                         }
                                     }

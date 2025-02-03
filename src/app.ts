@@ -29,10 +29,8 @@ import { home } from './routes/home';
 import path from 'path';
 
 import iprsPersonRouter from './routes/v1/search_iprs';
-import { ModuleDataRouter } from './routes/v1/module_data';
-import UserRouter from './routes/v1/user';
-import { SubModuleDataRouter } from './routes/v1/sub_module_data';
-import { ApplicationsDataRouter } from './routes/v1/applications';
+import OfficerRouter from './routes/v1/officer';
+// import { ApplicationsDataRouter } from './routes/v1/applications';
 import { RegionRouter } from './routes/v1/region';
 import { CountiesRouter } from './routes/v1/counties';
 import SubCountiesRouter from './routes/v1/sub_counties';
@@ -40,6 +38,7 @@ import { DivisionRouter } from './routes/v1/division';
 import VillageRouter from './routes/v1/village';
 import locationRouter from './routes/v1/location';
 import DesignationRouter from './routes/v1/designation';
+import { ServiceRouter } from './routes/v1/service';
 // import { ApplicationsDataRouter } from './routes/v1/applications';
 
 app.use(bodyParser.json({ limit: '50mb', type: 'application/json' }));
@@ -53,7 +52,7 @@ app.use(session({
 
 
 // app.use(cors({credentials: true, origin: '*'}))
-const whitelist = ['http://localhost:3007', 'http://localhost', '*'];
+const whitelist = ['http://localhost:3000', 'http://localhost', '*'];
 // init()30
 
 app.options('*', cors())
@@ -92,8 +91,8 @@ export const io = new Server(server, {
 // routes
 app.use('/', home);
 app.use('/api/v1/iprsPersons', iprsPersonRouter);
-app.use('/api/v1/user', UserRouter);
-app.use('/api/v1/applications', ApplicationsDataRouter);
+app.use('/api/v1/officer', OfficerRouter);
+// app.use('/api/v1/applications', ApplicationsDataRouter);
 app.use('/api/v1/region', RegionRouter);
 app.use('/api/v1/counties', CountiesRouter);
 app.use('/api/v1/sub_counties', SubCountiesRouter);
@@ -101,6 +100,7 @@ app.use('/api/v1/division', DivisionRouter);
 app.use('/api/v1/location', locationRouter);
 app.use('/api/v1/village', VillageRouter);
 app.use('/api/v1/designation', DesignationRouter);
+app.use('/api/v1/service', ServiceRouter);
 
 
 app.get('/uploads/:filename', (req, res) => {

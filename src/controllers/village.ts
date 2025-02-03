@@ -3,14 +3,14 @@ import { prisma } from "../app";
 
 // Create a new village
 export const createVillage = async (req: Request, res: Response) => {
-    const { name, description, locationId } = req.body;
+    const { name, description, wardId } = req.body;
 
     try {
         const newVillage = await prisma.village.create({
             data: {
                 name,
                 description,
-                locationId
+                wardId
             }
         });
 
@@ -32,7 +32,7 @@ export const getAllVillages = async (req: Request, res: Response) => {
                 id: 'desc',
             },
             include: {
-                location: true
+                ward: true
             }
         });
 
@@ -54,7 +54,7 @@ export const getVillageById = async (req: Request, res: Response) => {
         const village = await prisma.village.findUnique({
             where: { id: parseInt(id) },
             include: {
-                location: true
+                ward: true
             }
         });
 
@@ -75,7 +75,7 @@ export const getVillageById = async (req: Request, res: Response) => {
 // Update a village by ID
 export const updateVillage = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { name, description, locationId } = req.body;
+    const { name, description, wardId } = req.body;
 
     try {
         const updatedVillage = await prisma.village.update({
@@ -83,7 +83,7 @@ export const updateVillage = async (req: Request, res: Response) => {
             data: {
                 name,
                 description,
-                locationId
+                wardId
             }
         });
 

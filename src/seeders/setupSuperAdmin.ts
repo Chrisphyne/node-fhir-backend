@@ -6,7 +6,7 @@ import { searchIPRSPerson } from "../service/search_iprs"; // Import your IPRS s
 dotenv.config(); // Load environment variables from .env file
 
 async function setupSuperAdmin() {
-  const existingSuperAdmin = await prisma.user.findFirst({
+  const existingSuperAdmin = await prisma.officer.findFirst({
     where: { email: "info@intelligentso.com" }
   });
 
@@ -33,12 +33,18 @@ async function setupSuperAdmin() {
     const hashedPassword = await bcrypt.hash(password, 10); // Hash the password from the .env file
 
     // Create the Super Admin user and associate with the IPRS person
-    await prisma.user.create({
+    await prisma.officer.create({
       data: {
         name: superAdminData.name,
+        rank: superAdminData.rank,
         email: superAdminData.email,
+        service_number: superAdminData.service_number,
+        badge_no: superAdminData.badge_no,
+        date_of_birth: superAdminData.date_of_birth,
+        gender: superAdminData.gender,
+        contact_info: superAdminData.contact_info,
+        emergency_contact_info: superAdminData.emergency_contact_info,
         password: hashedPassword,
-        telephone: superAdminData.telephone,
         iPRS_PersonId: iprsPerson.id,  // Associate the IPRS person with the Super Admin
         created_at: new Date(),
       },

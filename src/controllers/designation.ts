@@ -5,21 +5,21 @@ import { searchIPRSPerson } from "../service/search_iprs";
 
 declare global {
     namespace Express {
-        interface User {
+        interface Officer {
             designation?: any;  // Or use proper Designation type from your Prisma schema
         }
     }
 }
 
-// Assign role to a user
+// Assign role to a officer
 export const assignRole = async (req: Request, res: Response) => {
-    const { userId, role, countiesId } = req.body;
+    const { officerId, roleId, countiesId } = req.body;
 
     try {
         const newDesignation = await prisma.designation.create({
             data: {
-                userId,
-                role,
+                officerId,
+                roleId,
                 countiesId,
             },
         });
@@ -39,20 +39,20 @@ export const assignRole = async (req: Request, res: Response) => {
 // Middleware to check user permissions
 export const checkRole = (roles: string[]) => {
     return async (req: Request, res: Response, next: Function) => {
-        const userId = req.user.id; // Assuming user ID is stored in req.user
+        const officerId = (req as any).officer?.id; // Safely access officer ID with type assertion
 
         try {
             const designation = await prisma.designation.findFirst({
-                where: { userId: parseInt(userId) },
+                where: { officerId },
             });
 
-            if (!designation || !roles.includes(designation.role)) {
+            if (!designation || !roles.includes(designation.roleId.toString())) {
                 return res.status(403).json({
                     message: "Access denied. Insufficient permissions.",
                 });
             }
 
-            req.user.designation = designation; // Attach designation to request
+            (req as any).officer = { designation }; // Attach designation to request object
             next();
         } catch (error) {
             console.error(error);
@@ -61,41 +61,12 @@ export const checkRole = (roles: string[]) => {
     };
 };
 
-// Fetch reports based on user role
-// export const fetchReports = async (req: Request, res: Response) => {
-//     const { designation } = req.user; // Assuming designation is attached to req.user
 
-//     try {
-//         let reports;
-
-//         if (designation.role === "Admin") {
-//             reports = await prisma.report.findMany();
-//         } else if (designation.role === "Manager" || designation.role === "User") {
-//             reports = await prisma.report.findMany({
-//                 where: { countiesId: designation.countiesId },
-//             });
-//         } else {
-//             return res.status(403).json({
-//                 message: "Access denied. Invalid role.",
-//             });
-//         }
-
-//         res.json({
-//             message: "Reports fetched successfully",
-//             data: reports,
-//         });
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({
-//             message: "An error occurred while fetching reports",
-//         });
-//     }
-// };
 
 
 // Create users (Manager and Admin only)
-export const createUser = async (req: Request, res: Response) => {
-    const { designation } = req.user; // Assuming designation is attached to req.user
+export const createOfficer = async (req: Request, res: Response) => {
+    const { designation } = (req as any).officer; // Type assertion to access officer property
 
     if (designation.role !== "Admin" && designation.role !== "Manager") {
         return res.status(403).json({
@@ -103,11 +74,11 @@ export const createUser = async (req: Request, res: Response) => {
         });
     }
 
-    const { email, telephone, password, id_no, role: userRole, countiesId } = req.body;
+    const { email, service_number, password, id_no, rank, badge_no, date_of_birth, gender, contact_info, emergency_contact_info, role: userRole, countiesId } = req.body;
 
     try {
         // Validate input
-        if (!email || !telephone || !password || !id_no) {
+        if (!email || !service_number || !password || !id_no) {
             return res.status(400).json({ message: "Missing required fields" });
         }
 
@@ -124,11 +95,17 @@ export const createUser = async (req: Request, res: Response) => {
         const fullName = `${iprsPerson.first_name} ${iprsPerson.middle_name || ""} ${iprsPerson.last_name}`.trim();
 
         // Create user without locationId
-        const newUser = await prisma.user.create({
+        const newOfficer = await prisma.officer.create({
             data: {
                 name: fullName,
                 email,
-                telephone,
+                service_number,
+                rank,
+                badge_no,
+                date_of_birth,
+                gender,
+                contact_info,
+                emergency_contact_info,
                 password: hashedPassword,
                 iPRS_PersonId: iprsPerson.id,
                 created_at: new Date(),
@@ -137,18 +114,18 @@ export const createUser = async (req: Request, res: Response) => {
 
         await prisma.designation.create({
             data: {
-                userId: newUser.id,
-                role: userRole,
+                officerId: newOfficer.id,
+                roleId: userRole,
                 countiesId,
             },
         });
 
         res.status(201).json({
-            message: "User created successfully",
-            data: newUser,
+            message: "Officer created successfully",
+            data: newOfficer,
         });
     } catch (error) {
-        console.error("Error creating user:", error);
+        console.error("Error creating officer:", error);
 
         if (error.code === "P2002") {
             // Prisma unique constraint violation
@@ -156,14 +133,14 @@ export const createUser = async (req: Request, res: Response) => {
         }
 
         res.status(500).json({
-            message: "An error occurred while creating the user",
+            message: "An error occurred while creating the officer",
         });
     }
 };
 
 // Update user role (Admin only)
-export const updateUserRole = async (req: Request, res: Response) => {
-    const { designation } = req.user;
+export const updateOfficerRole = async (req: Request, res: Response) => {
+    const { designation } = (req as any).officer;
 
     if (designation.role !== "Admin") {
         return res.status(403).json({
@@ -171,11 +148,11 @@ export const updateUserRole = async (req: Request, res: Response) => {
         });
     }
 
-    const { userId, newRole, countiesId } = req.body;
+    const { officerId, newRole, countiesId } = req.body;
 
     try {
         const designation = await prisma.designation.findFirst({
-            where: { userId: parseInt(userId) }
+            where: { officerId: parseInt(officerId.toString()) },
         });
 
         if (!designation) {
@@ -185,7 +162,7 @@ export const updateUserRole = async (req: Request, res: Response) => {
         const updatedDesignation = await prisma.designation.update({
             where: { id: designation.id },
             data: {
-                role: newRole,
+                roleId: newRole,
                 countiesId,
             },
         });

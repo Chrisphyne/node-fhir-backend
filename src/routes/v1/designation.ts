@@ -2,15 +2,15 @@ import { Router } from "express";
 import {
     assignRole,
     checkRole,
-    createUser,
-    updateUserRole
+    createOfficer,
+    updateOfficerRole
 } from "../../controllers/designation";
 
 const DesignationRouter = Router();
 
 DesignationRouter.post("/", assignRole);
 DesignationRouter.get("/", checkRole);
-DesignationRouter.get("/:id", createUser);
-DesignationRouter.put("/:id", updateUserRole);
+DesignationRouter.get("/:id", createOfficer);
+DesignationRouter.put("/:id", updateOfficerRole);
 
 export default DesignationRouter;

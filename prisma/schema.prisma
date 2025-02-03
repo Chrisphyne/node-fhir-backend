@@ -93,6 +93,8 @@ model Officer {
   name                   String
   service_number         String            @unique
   password               String
+  is_temporary_password Boolean     @default(true)
+  email                  String            @unique
   rank                   String
   badge_no               String
   date_of_birth          String

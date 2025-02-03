@@ -17,14 +17,14 @@ opts.secretOrKey = 'secret';
 passport.use(new JwtStrategy(opts,
      async function (jwt_payload, done)  { 
       console.log('jwt_payload', jwt_payload);
-    let user =   await prisma.user.findFirst({
+    let officer =   await prisma.officer.findFirst({
         where:{
           id:jwt_payload.id
         }
       })
         
-          if(user){ 
-            return done(null, user);
+          if(officer){ 
+            return done(null, officer);
 
           }else{
 
