@@ -16,11 +16,16 @@ export const assignRole = async (req: Request, res: Response) => {
     const { officerId, roleId, countiesId } = req.body;
 
     try {
+        // Validate required fields
+        if (!officerId || !roleId) {
+            return res.status(400).json({ message: "Missing required fields" });
+        }
+
         const newDesignation = await prisma.designation.create({
             data: {
-                officerId,
-                roleId,
-                countiesId,
+                officerId: Number(officerId), // Ensure it's an integer
+                roleId: Number(roleId), // Ensure it's an integer
+                countiesId: countiesId ? Number(countiesId) : null, // Handle optional countiesId
             },
         });
 
@@ -35,6 +40,7 @@ export const assignRole = async (req: Request, res: Response) => {
         });
     }
 };
+
 
 // Middleware to check user permissions
 export const checkRole = (roles: string[]) => {
@@ -61,6 +67,26 @@ export const checkRole = (roles: string[]) => {
     };
 };
 
+export const getAllRoles = async (req: Request, res: Response) => {
+    try {
+        const roles = await prisma.role.findMany({
+            orderBy: {
+                id: "desc",
+            },
+            include: {
+                Designation: true,
+            },
+        });
+
+        res.json({
+            message: "All roles fetched successfully",
+            data: roles
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "An error occurred while fetching roles" });
+    }
+};
 
 
 
@@ -74,7 +100,7 @@ export const createOfficer = async (req: Request, res: Response) => {
         });
     }
 
-    const { email, service_number, password, id_no, rank, badge_no, date_of_birth, gender, contact_info, emergency_contact_info, role: userRole, countiesId } = req.body;
+    const { email, service_number, password, id_no, rank, badge_no, date_of_birth, gender, contact_info, emergency_contact_info, role: userRole, countiesId, stationId } = req.body;
 
     try {
         // Validate input
@@ -106,8 +132,9 @@ export const createOfficer = async (req: Request, res: Response) => {
                 gender,
                 contact_info,
                 emergency_contact_info,
+                stationId: stationId,
                 password: hashedPassword,
-                iPRS_PersonId: iprsPerson.id,
+                iPRS_PersonId: Number(iprsPerson.id),
                 created_at: new Date(),
             },
         });

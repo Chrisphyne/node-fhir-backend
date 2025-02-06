@@ -15,7 +15,7 @@ const OfficerRouter = Router();
 
 // Officer Routes
 OfficerRouter.post("/",  createOfficer);
-OfficerRouter.post("/login", loginOfficer);
+OfficerRouter.post("/login", upload.none(), loginOfficer);
 OfficerRouter.get("/",  getAllOfficers);
 OfficerRouter.get("/:id",  getOfficerById);
 OfficerRouter.put("/:id",  updateOfficer);

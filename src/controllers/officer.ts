@@ -18,10 +18,10 @@ const transporter = nodemailer.createTransport({
 });
 
 export const createOfficer = async (req: Request, res: Response) => {
-  const { name, email, id_no, service_number, rank, badge_no, date_of_birth, gender, contact_info, emergency_contact_info } = req.body;
+  const { name, email, id_no, service_number, rank, badge_no, date_of_birth, gender, contact_info, emergency_contact_info, stationId } = req.body;
 
   try {
-    if (!name || !id_no || !service_number || !rank || !badge_no || !date_of_birth || !gender || !contact_info || !emergency_contact_info) {
+    if (!name || !id_no || !service_number || !rank || !badge_no || !date_of_birth || !gender || !contact_info || !emergency_contact_info || !stationId) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -47,6 +47,7 @@ export const createOfficer = async (req: Request, res: Response) => {
         gender,
         contact_info,
         emergency_contact_info,
+        stationId: stationId,
         service_number,
         password: hashedPassword,
         is_temporary_password: true,
@@ -88,8 +89,9 @@ export const createOfficer = async (req: Request, res: Response) => {
 export const getAllOfficers = async (req: Request, res: Response) => {
     try {
         const officers = await prisma.officer.findMany({
-            include: { iprs: true }, // Include IPRS_Person relationship
+            include: { iprs: true, station: true }, // Include IPRS_Person relationship
             orderBy: { id: 'desc' },
+            
         });
 
         res.json({
@@ -129,7 +131,7 @@ export const getOfficerById = async (req: Request, res: Response) => {
 // Update Officer
 export const updateOfficer = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { name, email, rank, badge_no, date_of_birth, gender, contact_info, emergency_contact_info } = req.body;
+  const { name, email, rank, badge_no, date_of_birth, gender, contact_info, emergency_contact_info, stationId } = req.body;
 
   try {
     // Check if the user exists
@@ -162,6 +164,7 @@ export const updateOfficer = async (req: Request, res: Response) => {
         gender,
         contact_info,
         emergency_contact_info,
+        stationId: stationId,
       },
     });
 
@@ -230,13 +233,26 @@ export const deleteOfficer = async (req: Request, res: Response) => {
 
 //  login user
 export const loginOfficer = async (req: Request, res: Response) => {
-  const { service_number, password } = req.body;
+  console.log(req.body);
 
+  const { service_number, pass } = req.body;
+  
   try {
-    const officer = await prisma.officer.findUnique({ where: { service_number } });
+    const officer = await prisma.officer.findUnique({ where: { service_number },
+
+    include: {
+      iprs: true,
+      Designation: {
+        include: {
+          role: true,
+        },
+      },
+      station: true,
+    }
+   });
     if (!officer) return res.status(404).json({ message: "Officer not found" });
 
-    const isPasswordValid = await bcrypt.compare(password, officer.password);
+    const isPasswordValid = await bcrypt.compare(pass, officer.password);
     if (!isPasswordValid) return res.status(401).json({ message: "Invalid credentials" });
 
     if (officer.is_temporary_password) {
@@ -247,7 +263,9 @@ export const loginOfficer = async (req: Request, res: Response) => {
     }
 
     const token = jwt.sign({ id: officer.id, service_number: officer.service_number }, JWTSecret, { expiresIn: "1d" });
-    return res.status(200).json({ message: "Login successful", data: { token, officer } });
+    //remove password from response
+    const { password, ...rest } = officer;
+    return res.status(200).json({ message: "Login successful", data: { token, officer: rest } });
   } catch (error) {
     console.error("Login Error:", error);
     return res.status(500).json({ message: "An error occurred during login" });

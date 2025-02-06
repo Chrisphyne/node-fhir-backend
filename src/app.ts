@@ -40,6 +40,9 @@ import locationRouter from './routes/v1/location';
 import DesignationRouter from './routes/v1/designation';
 import { ServiceRouter } from './routes/v1/service';
 // import { ApplicationsDataRouter } from './routes/v1/applications';
+import PoliceStationRouter from './routes/v1/police_station';
+import RoleRouter from './routes/v1/role';
+
 
 app.use(bodyParser.json({ limit: '50mb', type: 'application/json' }));
 app.use(session({
@@ -101,6 +104,8 @@ app.use('/api/v1/location', locationRouter);
 app.use('/api/v1/village', VillageRouter);
 app.use('/api/v1/designation', DesignationRouter);
 app.use('/api/v1/service', ServiceRouter);
+app.use('/api/v1/police_station', PoliceStationRouter);
+app.use('/api/v1/role', RoleRouter);
 
 
 app.get('/uploads/:filename', (req, res) => {

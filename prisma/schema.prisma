@@ -43,12 +43,13 @@ model Division {
 }
 
 model Location {
-  id         Int      @id @default(autoincrement())
-  name       String   @unique
-  division   Division @relation(fields: [divisionId], references: [id])
-  created_at DateTime @default(now())
-  divisionId Int
-  Ward       Ward[]
+  id            Int             @id @default(autoincrement())
+  name          String          @unique
+  division      Division        @relation(fields: [divisionId], references: [id])
+  created_at    DateTime        @default(now())
+  divisionId    Int
+  Ward          Ward[]
+  PoliceStation PoliceStation[]
 }
 
 model Ward {
@@ -88,34 +89,46 @@ model IPRS_Person {
   Officer           Officer[]
 }
 
+model PoliceStation {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+  location    Location?  @relation(fields: [locationId], references: [id])
+  created_at  DateTime  @default(now())
+  Officer     Officer[]
+  locationId  Int?
+}
+
 model Officer {
-  id                     Int               @id @default(autoincrement())
+  id                     Int            @id @default(autoincrement())
   name                   String
-  service_number         String            @unique
+  service_number         String         @unique
   password               String
-  is_temporary_password Boolean     @default(true)
-  email                  String            @unique
+  is_temporary_password  Boolean        @default(true)
+  email                  String         @unique
   rank                   String
   badge_no               String
   date_of_birth          String
   gender                 String
   contact_info           String
   emergency_contact_info String
-  iprs                   IPRS_Person       @relation(fields: [iPRS_PersonId], references: [id])
+  iprs                   IPRS_Person    @relation(fields: [iPRS_PersonId], references: [id])
   iPRS_PersonId          Int
-  created_at             DateTime          @default(now())
+  created_at             DateTime       @default(now())
   Designation            Designation[]
-  Ward                   Ward?             @relation(fields: [wardId], references: [id])
+  Ward                   Ward?          @relation(fields: [wardId], references: [id])
   wardId                 Int?
   Service                Service[]
+  station                PoliceStation @relation(fields: [stationId], references: [id])
+  stationId              Int
 }
 
 model Service {
-  id          Int      @id @default(autoincrement())
-  officer     Officer  @relation(fields: [officerId], references: [id])
-  department  String
+  id                 Int     @id @default(autoincrement())
+  officer            Officer @relation(fields: [officerId], references: [id])
+  department         String
   current_assignment String
-  officerId   Int
+  officerId          Int
 }
 
 model Role {
@@ -130,10 +143,18 @@ model Designation {
   id         Int      @id @default(autoincrement())
   officer    Officer  @relation(fields: [officerId], references: [id])
   role       Role     @relation(fields: [roleId], references: [id])
-  county     Counties @relation(fields: [countiesId], references: [id])
+  county     Counties? @relation(fields: [countiesId], references: [id])
   created_at DateTime @default(now())
   officerId  Int
-  countiesId Int
+  countiesId Int?
   roleId     Int
 }
 
+
+model Registry {
+  id Int @id @default(autoincrement())
+  microservice String
+  icon String[]
+  url String
+  created_at DateTime @default(now())
+}
