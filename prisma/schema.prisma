@@ -154,7 +154,8 @@ model Designation {
 model Registry {
   id Int @id @default(autoincrement())
   microservice String
-  icon String[]
+  private String @default("http://localhost:3004")
+  icon String
   url String
   created_at DateTime @default(now())
 }

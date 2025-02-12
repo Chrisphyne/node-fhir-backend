@@ -6,14 +6,22 @@ import {
     updateRegistry,
     deleteRegistry,
 } from "../../controllers/registry";
-import { upload } from "../../middleware/multer";
+import multer from "multer";
+import { uploadImage } from "../../utils/uploadImage";
 
-const RegistryRouter = Router();
+const router = Router();
 
-RegistryRouter.post("/", upload.array("icon", 5), createRegistry); // Allow multiple image uploads
-RegistryRouter.get("/", getAllRegistries);
-RegistryRouter.get("/:id", getRegistryById);
-RegistryRouter.put("/:id", upload.array("icon", 5), updateRegistry);
-RegistryRouter.delete("/:id", deleteRegistry);  
+const upload = multer({ storage: multer.diskStorage({
+  destination: (req, file, cb) => {
+    const path = uploadImage(file);
+    cb(null, path);
+  }
+})});
 
-export default RegistryRouter;
+router.post("/", upload.single("icon"), createRegistry);
+router.get("/", getAllRegistries);
+router.get("/:id", getRegistryById);
+router.put("/:id", upload.single("icon"), updateRegistry);
+router.delete("/:id", deleteRegistry);
+
+export default router;

@@ -3,21 +3,22 @@ import { prisma } from "../app";
 import { uploadImage } from "../utils/uploadImage";
 
 export const createRegistry = async (req: Request, res: Response) => {
-    const { microservice, url } = req.body;
-    const files = req.files as Express.Multer.File[];
+    const { microservice, url, icon, private_url } = req.body;
+    const file = req.file as Express.Multer.File; // Single file upload
 
     try {
         if (!microservice || !url) {
             return res.status(400).json({ message: "Microservice name and URL are required" });
         }
 
-        const iconPaths = files.map(file => uploadImage(file)); // Save image paths
+        // const iconPath = file ? uploadImage(file) : ""; // Store the file path if uploaded
 
         const newRegistry = await prisma.registry.create({
             data: {
                 microservice,
-                icon: iconPaths, // Store multiple image paths
+                icon: icon, // Store a single image path as a string
                 url,
+                private: private_url
             },
         });
 
@@ -73,18 +74,17 @@ export const getRegistryById = async (req: Request, res: Response) => {
 
 export const updateRegistry = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { microservice, url } = req.body;
-    const files = req.files as Express.Multer.File[];
+    const { microservice, url, icon } = req.body;
+    const file = req.file as Express.Multer.File;
 
     try {
-        const iconPaths = files.length ? files.map(file => uploadImage(file)) : undefined;
-
+        
         const updatedRegistry = await prisma.registry.update({
             where: { id: parseInt(id) },
             data: {
                 microservice,
                 url,
-                icon: iconPaths || undefined, // Only update icon if new files are uploaded
+                icon: icon || undefined, // Update only if a new image is uploaded
             },
         });
 
