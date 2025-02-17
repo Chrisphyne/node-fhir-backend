@@ -38,11 +38,34 @@ export const getAllRegistries = async (req: Request, res: Response) => {
             orderBy: {
                 id: "desc",
             },
+           
         });
+
+        //hit private url
+        const registriesWithPrivate = await Promise.all(registries.map(async (registry) => {
+            const response = await fetch(registry.private + "/api/v1/module");
+                 
+            if (response.ok) {
+                const data = await response.json();
+                console.log(data, "data", registry.private);
+                let remapRegistry ={
+                    ...registry,
+                    // private: undefined,
+                    // id:undefined,
+                    created_at:undefined,
+                }
+                return {
+                    ...remapRegistry,
+                    data: data.data,
+                };
+            } else {
+                return null;
+            }
+        }));
 
         res.json({
             message: "All registry entries fetched successfully",
-            data: registries,
+            data: registriesWithPrivate,
         });
     } catch (error) {
         console.error(error);
@@ -74,7 +97,7 @@ export const getRegistryById = async (req: Request, res: Response) => {
 
 export const updateRegistry = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { microservice, url, icon } = req.body;
+    const { microservice, url, icon, private_url } = req.body;
     const file = req.file as Express.Multer.File;
 
     try {
@@ -85,6 +108,7 @@ export const updateRegistry = async (req: Request, res: Response) => {
                 microservice,
                 url,
                 icon: icon || undefined, // Update only if a new image is uploaded
+                private: private_url,
             },
         });
 

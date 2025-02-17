@@ -18,10 +18,10 @@ const transporter = nodemailer.createTransport({
 });
 
 export const createOfficer = async (req: Request, res: Response) => {
-  const { name, email, id_no, service_number, rank, badge_no, date_of_birth, gender, contact_info, emergency_contact_info, stationId } = req.body;
+  const { name, email, id_no, service_number, roleId, badge_number,  stationId, phone_number } = req.body;
 
   try {
-    if (!name || !id_no || !service_number || !rank || !badge_no || !date_of_birth || !gender || !contact_info || !emergency_contact_info || !stationId) {
+    if (!name || !id_no || !service_number || !roleId || !badge_number || !stationId || !phone_number) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -41,12 +41,9 @@ export const createOfficer = async (req: Request, res: Response) => {
       data: {
         name: fullName,
         email,
-        rank,
-        badge_no,
-        date_of_birth,
-        gender,
-        contact_info,
-        emergency_contact_info,
+        phone_number,
+        roleId: roleId,
+        badge_number,
         stationId: stationId,
         service_number,
         password: hashedPassword,
@@ -131,7 +128,7 @@ export const getOfficerById = async (req: Request, res: Response) => {
 // Update Officer
 export const updateOfficer = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { name, email, rank, badge_no, date_of_birth, gender, contact_info, emergency_contact_info, stationId } = req.body;
+  const { name, email, roleId, badge_number, stationId, phone_number } = req.body;
 
   try {
     // Check if the user exists
@@ -158,12 +155,9 @@ export const updateOfficer = async (req: Request, res: Response) => {
       data: {
         name,
         email,
-        rank,
-        badge_no,
-        date_of_birth,
-        gender,
-        contact_info,
-        emergency_contact_info,
+        phone_number,
+        roleId,
+        badge_number,
         stationId: stationId,
       },
     });
@@ -241,7 +235,9 @@ export const loginOfficer = async (req: Request, res: Response) => {
     const officer = await prisma.officer.findUnique({ where: { service_number },
 
     include: {
+      role: true,
       iprs: true,
+
       Designation: {
         include: {
           role: true,

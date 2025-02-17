@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../app";
-import bcrypt from "bcrypt";
-import { searchIPRSPerson } from "../service/search_iprs";
+// import bcrypt from "bcrypt";
+// import { searchIPRSPerson } from "../service/search_iprs";
 
 declare global {
     namespace Express {
@@ -11,21 +11,21 @@ declare global {
     }
 }
 
-// Assign role to a officer
-export const assignRole = async (req: Request, res: Response) => {
+
+// Create a new designation (Assign Role)
+export const createDesignation = async (req: Request, res: Response) => {
     const { officerId, roleId, countiesId } = req.body;
 
     try {
-        // Validate required fields
         if (!officerId || !roleId) {
             return res.status(400).json({ message: "Missing required fields" });
         }
 
         const newDesignation = await prisma.designation.create({
             data: {
-                officerId: Number(officerId), // Ensure it's an integer
-                roleId: Number(roleId), // Ensure it's an integer
-                countiesId: countiesId ? Number(countiesId) : null, // Handle optional countiesId
+                officerId: Number(officerId),
+                roleId: Number(roleId),
+                countiesId: countiesId ? Number(countiesId) : null,
             },
         });
 
@@ -35,173 +35,112 @@ export const assignRole = async (req: Request, res: Response) => {
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({
-            message: "An error occurred while assigning the role",
-        });
+        res.status(500).json({ message: "An error occurred while assigning the role" });
     }
 };
 
-
-// Middleware to check user permissions
-export const checkRole = (roles: string[]) => {
-    return async (req: Request, res: Response, next: Function) => {
-        const officerId = (req as any).officer?.id; // Safely access officer ID with type assertion
-
-        try {
-            const designation = await prisma.designation.findFirst({
-                where: { officerId },
-            });
-
-            if (!designation || !roles.includes(designation.roleId.toString())) {
-                return res.status(403).json({
-                    message: "Access denied. Insufficient permissions.",
-                });
-            }
-
-            (req as any).officer = { designation }; // Attach designation to request object
-            next();
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ message: "An error occurred while checking permissions." });
-        }
-    };
-};
-
-export const getAllRoles = async (req: Request, res: Response) => {
+// Get all designations
+export const getAllDesignations = async (_req: Request, res: Response) => {
     try {
-        const roles = await prisma.role.findMany({
-            orderBy: {
-                id: "desc",
-            },
+        const designations = await prisma.designation.findMany({
             include: {
-                Designation: true,
+                officer: true,
+                role: true,
+                county: true,
             },
         });
 
-        res.json({
-            message: "All roles fetched successfully",
-            data: roles
+        res.status(200).json({
+            message: "Assigned roles retrieved successfully",
+            data: designations,
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "An error occurred while fetching roles" });
+        res.status(500).json({ message: "An error occurred while retrieving assigned roles" });
     }
 };
 
-
-
-// Create users (Manager and Admin only)
-export const createOfficer = async (req: Request, res: Response) => {
-    const { designation } = (req as any).officer; // Type assertion to access officer property
-
-    if (designation.role !== "Admin" && designation.role !== "Manager") {
-        return res.status(403).json({
-            message: "Access denied. Insufficient permissions.",
-        });
-    }
-
-    const { email, service_number, password, id_no, rank, badge_no, date_of_birth, gender, contact_info, emergency_contact_info, role: userRole, countiesId, stationId } = req.body;
+// Get a single designation by ID
+export const getDesignationById = async (req: Request, res: Response) => {
+    const { id } = req.params;
 
     try {
-        // Validate input
-        if (!email || !service_number || !password || !id_no) {
-            return res.status(400).json({ message: "Missing required fields" });
-        }
-
-        // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Fetch or create IPRS_Person using the provided ID number
-        const iprsPerson = await searchIPRSPerson(id_no);
-
-        if (!iprsPerson) {
-            return res.status(404).json({ message: "IPRS person not found" });
-        }
-
-        const fullName = `${iprsPerson.first_name} ${iprsPerson.middle_name || ""} ${iprsPerson.last_name}`.trim();
-
-        // Create user without locationId
-        const newOfficer = await prisma.officer.create({
-            data: {
-                name: fullName,
-                email,
-                service_number,
-                rank,
-                badge_no,
-                date_of_birth,
-                gender,
-                contact_info,
-                emergency_contact_info,
-                stationId: stationId,
-                password: hashedPassword,
-                iPRS_PersonId: Number(iprsPerson.id),
-                created_at: new Date(),
+        const designation = await prisma.designation.findUnique({
+            where: { id: Number(id) },
+            include: {
+                officer: true,
+                role: true,
+                county: true,
             },
-        });
-
-        await prisma.designation.create({
-            data: {
-                officerId: newOfficer.id,
-                roleId: userRole,
-                countiesId,
-            },
-        });
-
-        res.status(201).json({
-            message: "Officer created successfully",
-            data: newOfficer,
-        });
-    } catch (error) {
-        console.error("Error creating officer:", error);
-
-        if (error.code === "P2002") {
-            // Prisma unique constraint violation
-            return res.status(409).json({ message: "Email or telephone already exists" });
-        }
-
-        res.status(500).json({
-            message: "An error occurred while creating the officer",
-        });
-    }
-};
-
-// Update user role (Admin only)
-export const updateOfficerRole = async (req: Request, res: Response) => {
-    const { designation } = (req as any).officer;
-
-    if (designation.role !== "Admin") {
-        return res.status(403).json({
-            message: "Access denied. Only Admins can update roles.",
-        });
-    }
-
-    const { officerId, newRole, countiesId } = req.body;
-
-    try {
-        const designation = await prisma.designation.findFirst({
-            where: { officerId: parseInt(officerId.toString()) },
         });
 
         if (!designation) {
             return res.status(404).json({ message: "Designation not found" });
         }
 
+        res.status(200).json({
+            message: "Designation retrieved successfully",
+            data: designation,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "An error occurred while retrieving the designation" });
+    }
+};
+
+// Update a designation by ID
+export const updateDesignation = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { officerId, roleId, countiesId } = req.body;
+
+    try {
+        const existingDesignation = await prisma.designation.findUnique({
+            where: { id: Number(id) },
+        });
+
+        if (!existingDesignation) {
+            return res.status(404).json({ message: "Designation not found" });
+        }
+
         const updatedDesignation = await prisma.designation.update({
-            where: { id: designation.id },
+            where: { id: Number(id) },
             data: {
-                roleId: newRole,
-                countiesId,
+                officerId: officerId ? Number(officerId) : existingDesignation.officerId,
+                roleId: roleId ? Number(roleId) : existingDesignation.roleId,
+                countiesId: countiesId !== undefined ? Number(countiesId) : existingDesignation.countiesId,
             },
         });
 
-        res.json({
-            message: "User role updated successfully",
+        res.status(200).json({
+            message: "Designation updated successfully",
             data: updatedDesignation,
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({
-            message: "An error occurred while updating the user role",
+        res.status(500).json({ message: "An error occurred while updating the designation" });
+    }
+};
+
+// Delete a designation by ID
+export const deleteDesignation = async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    try {
+        const existingDesignation = await prisma.designation.findUnique({
+            where: { id: Number(id) },
         });
+
+        if (!existingDesignation) {
+            return res.status(404).json({ message: "Designation not found" });
+        }
+
+        await prisma.designation.delete({
+            where: { id: Number(id) },
+        });
+
+        res.status(200).json({ message: "Designation deleted successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "An error occurred while deleting the designation" });
     }
 };
