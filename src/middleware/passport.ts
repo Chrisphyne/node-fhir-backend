@@ -8,12 +8,6 @@ let opts:any = {}
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 opts.secretOrKey = 'secret'; 
 
-// console.log('====================================');
-// console.log(ExtractJwt.fromAuthHeaderAsBearerToken(),'bearer');
-// console.log('====================================');
- 
-
-
 passport.use(new JwtStrategy(opts,
      async function (jwt_payload, done)  { 
       console.log('jwt_payload', jwt_payload);

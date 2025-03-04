@@ -86,7 +86,7 @@ export const createOfficer = async (req: Request, res: Response) => {
 export const getAllOfficers = async (req: Request, res: Response) => {
     try {
         const officers = await prisma.officer.findMany({
-            include: { iprs: true, station: true }, // Include IPRS_Person relationship
+            include: { iprs: true, station: true, role: true }, // Include IPRS_Person relationship
             orderBy: { id: 'desc' },
             
         });

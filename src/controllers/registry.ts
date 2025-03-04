@@ -33,21 +33,28 @@ export const createRegistry = async (req: Request, res: Response) => {
 };
 
 export const getAllRegistries = async (req: Request, res: Response) => {
+    
     try {
         const registries = await prisma.registry.findMany({
             orderBy: {
-                id: "desc",
+                id: "asc",
             },
            
         });
+        // Sort registries with "OCCURRENCE BOOK" first, then rest in descending order
+        const sortedRegistries = registries.sort((a, b) => {
+            if (a.microservice === "OCCURRENCE BOOK") return -1;
+            if (b.microservice === "OCCURRENCE BOOK") return 1;
+            return 0;
+        });
+        
+
 
         //hit private url
         const registriesWithPrivate = await Promise.all(registries.map(async (registry) => {
-            const response = await fetch(registry.private + "/api/v1/module");
-                 
-            if (response.ok) {
+            try {
+                const response = await fetch(registry.private + "/api/v1/module");
                 const data = await response.json();
-                console.log(data, "data", registry.private);
                 let remapRegistry ={
                     ...registry,
                     // private: undefined,
@@ -57,10 +64,21 @@ export const getAllRegistries = async (req: Request, res: Response) => {
                 return {
                     ...remapRegistry,
                     data: data.data,
+                }; 
+          
+            } catch (error) {
+                let remapRegistry ={
+                    ...registry,
+                    // private: undefined,
+                    // id:undefined,
+                    created_at:undefined,
+                }
+                console.error(error);
+                return {
+                    ...remapRegistry,
+                    data: [],
                 };
-            } else {
-                return null;
-            }
+            }   
         }));
 
         res.json({
