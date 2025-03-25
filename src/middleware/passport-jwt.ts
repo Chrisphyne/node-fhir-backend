@@ -11,6 +11,7 @@ const options = {
 };
 
 export const jwtStrategy = new JwtStrategy(options, async (payload, done) => {
+  console.log(payload, "payload");
   try {
     const officer = await prisma.officer.findUnique({
       where: { id: payload.sub }

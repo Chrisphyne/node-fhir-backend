@@ -99,24 +99,28 @@ model PoliceStation {
 }
 
 model Officer {
-  id                    Int           @id @default(autoincrement())
-  name                  String
-  service_number        String        @unique
-  password              String
-  is_temporary_password Boolean       @default(true)
-  email                 String        @unique
-  phone_number          String
-  role                  Role          @relation(fields: [roleId], references: [id])
-  badge_number          String        @unique
-  iprs                  IPRS_Person   @relation(fields: [iPRS_PersonId], references: [id])
-  iPRS_PersonId         Int
-  created_at            DateTime      @default(now())
-  Designation           Designation[]
-  station               PoliceStation @relation(fields: [stationId], references: [id])
-  stationId             Int
-  profile_photo         String?
-  updated_at            DateTime      @updatedAt
-  roleId                Int
+  id                       Int                        @id @default(autoincrement())
+  name                     String
+  service_number           String                     @unique
+  password                 String
+  is_temporary_password    Boolean                    @default(true)
+  email                    String                     @unique
+  phone_number             String
+  role                     Role                       @relation(fields: [roleId], references: [id])
+  badge_number             String                     @unique
+  iprs                     IPRS_Person                @relation(fields: [iPRS_PersonId], references: [id])
+  iPRS_PersonId            Int
+  created_at               DateTime                   @default(now())
+  Designation              Designation[]
+  station                  PoliceStation              @relation(fields: [stationId], references: [id])
+  stationId                Int
+  profile_photo            String?
+  updated_at               DateTime                   @updatedAt
+  socket_id                String?
+  roleId                   Int
+  Next_Of_Kin              Next_Of_Kin[]
+  Health_Details           Health_Details[]
+  Qualification_And_Skills Qualification_And_Skills[]
 }
 
 model Role {
@@ -146,4 +150,57 @@ model Registry {
   icon         String
   url          String
   created_at   DateTime @default(now())
+}
+
+//  profile details
+
+enum Relationship {
+  Parent
+  Sibling
+  Spouse
+  Relative
+}
+
+enum Injury_Type {
+  Physical
+  Psychological
+  Occupational
+  Training_And_Accidental
+  Work_place_related
+}
+
+enum Language {
+  English
+  Kiswahili
+}
+
+model Next_Of_Kin {
+  id           Int          @id @default(autoincrement())
+  name         String
+  relationship Relationship
+  phone_number String       @unique
+  officer      Officer      @relation(fields: [officerId], references: [id])
+  created_at   DateTime     @default(now())
+  officerId    Int
+}
+
+model Health_Details {
+  id                      Int      @id @default(autoincrement())
+  blood_group             String
+  health_insurance_number String
+  injury_type             Injury_Type
+  officer                 Officer  @relation(fields: [officerId], references: [id])
+  created_at              DateTime @default(now())
+  officerId               Int
+}
+
+model Qualification_And_Skills {
+  id         Int      @id @default(autoincrement())
+  certification       String
+  skills       String
+  years_of_experience  String
+  languages         Language
+  officer    Officer  @relation(fields: [officerId], references: [id])
+  created_at DateTime @default(now())
+  officerId  Int
 }

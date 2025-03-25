@@ -21,6 +21,8 @@ const http = require('http');
 const app = express();
 
 const { Server } = require("socket.io");
+
+
 import { uuid } from 'uuidv4';
 import cors from 'cors';
 import { home } from './routes/home';
@@ -42,9 +44,13 @@ import DesignationRouter from './routes/v1/designation';
 import PoliceStationRouter from './routes/v1/police_station';
 import RoleRouter from './routes/v1/role';
 import RegistryRouter from './routes/v1/registry';
-
-
-app.use(bodyParser.json({ limit: '50mb', type: 'application/json' }));
+import HealthDetailsRouter from './routes/v1/health_details';
+import QualificationAndSkillsRouter from './routes/v1/qualification_skills';
+import NextOfKinRouter from './routes/v1/next_of_kin';
+import validateToken from './routes/v1/validate_token';
+import { socketsManager } from './service/sockets';
+import { DutiesRouter } from './routes/connection/duties';
+app.use(bodyParser.json({ limit: '50mb', type: 'application/json' }));              
 app.use(session({
   secret: "secret",
   resave: false,
@@ -106,7 +112,12 @@ app.use('/api/v1/designation', DesignationRouter);
 app.use('/api/v1/police_station', PoliceStationRouter);
 app.use('/api/v1/role', RoleRouter);
 app.use('/api/v1/registry', RegistryRouter);
-// app.use('/api/v1/rank', RankRouter);
+app.use('/api/v1/health_details', HealthDetailsRouter);
+app.use('/api/v1/qualification_skills', QualificationAndSkillsRouter);
+app.use('/api/v1/next_of_kin', NextOfKinRouter);
+app.use('/validate-token',  validateToken);
+app.use('/send-duty', DutiesRouter);
+// app.use('/api/v1/rank', RanpmkRouter);
 
 
 app.get('/uploads/:filename', (req, res) => {
@@ -115,6 +126,7 @@ app.get('/uploads/:filename', (req, res) => {
 });
 
 export const JWTSecret = "secret"
+socketsManager()
 // app.use('/product', product)
 
 // start the server
