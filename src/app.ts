@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
+import { createClient } from 'redis';
 var multer = require('multer');
 export var forms = multer({
   dest: 'upload/',
@@ -21,6 +22,13 @@ const http = require('http');
 const app = express();
 
 const { Server } = require("socket.io");
+
+export const redisClient = createClient( {socket: {
+  host: '127.0.0.1',
+  port: 6379
+}});
+redisClient.on('error', (err: Error) => console.error('Redis error:', err));
+redisClient.connect();
 
 
 import { uuid } from 'uuidv4';

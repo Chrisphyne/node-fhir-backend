@@ -91,6 +91,7 @@ model IPRS_Person {
 model PoliceStation {
   id          Int       @id @default(autoincrement())
   name        String    @unique
+  station_code String?
   description String?
   location    Location? @relation(fields: [locationId], references: [id])
   created_at  DateTime  @default(now())

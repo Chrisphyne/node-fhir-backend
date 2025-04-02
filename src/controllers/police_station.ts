@@ -1,13 +1,14 @@
 import { Request, Response } from "express";
 import { prisma } from "../app";
-
+import { redisClient } from "../app";
 export const createPoliceStation = async (req: Request, res: Response) => {
-    const { name, description, locationId } = req.body;
+    const { name, station_code, description, locationId } = req.body;
 
     try {
         const newPoliceStation = await prisma.policeStation.create({
             data: {
                 name,
+                station_code,
                 description,
                 locationId
             }
@@ -25,6 +26,13 @@ export const createPoliceStation = async (req: Request, res: Response) => {
 
 export const getAllPoliceStations = async (req: Request, res: Response) => {
     try {
+        const cachedPoliceStations = await redisClient.get('policeStations');
+        if (cachedPoliceStations) {
+            return res.json({
+                message: "Police Stations fetched successfully from cache",
+                data: JSON.parse(cachedPoliceStations)
+            });
+        }
         const policeStations = await prisma.policeStation.findMany({
             orderBy: {
                 id: "desc",
@@ -44,6 +52,31 @@ export const getAllPoliceStations = async (req: Request, res: Response) => {
         res.status(500).json({ message: "An error occurred while fetching Police Stations" });
     }
 };
+
+export const getAllPoliceStationsCache = async (req: Request, res: Response) => {
+    try {
+        const policeStations = await prisma.policeStation.findMany({
+            orderBy: {
+                id: "desc",
+            },
+            include: {
+                location: true,
+                Officer: true,
+            },
+        });
+
+        await redisClient.set('policeStations', JSON.stringify(policeStations));
+
+        res.json({
+            message: "All Police Stations fetched successfully  cached",
+            data: policeStations
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "An error occurred while fetching Police Stations" });
+    }
+};
+
 
 export const getPoliceStationById = async (req: Request, res: Response) => {
     const { id } = req.params;
@@ -73,13 +106,14 @@ export const getPoliceStationById = async (req: Request, res: Response) => {
 
 export const updatePoliceStation = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { name, description, locationId } = req.body;
+    const { name, station_code, description, locationId } = req.body;
 
     try {
         const updatedPoliceStation = await prisma.policeStation.update({
             where: { id: parseInt(id) },
             data: {
                 name,
+                station_code,
                 description,
                 locationId
             },
