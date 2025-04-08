@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { JWTSecret, prisma } from "../app";
+import { JWTSecret, prisma, redisClient } from "../app";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
@@ -93,6 +93,25 @@ export const getAllOfficers = async (req: Request, res: Response) => {
 
         res.json({
             message: "All officers fetched successfully",
+            data: officers,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "An error occurred while fetching officers" });
+    }
+};
+// Read All Officers
+export const getAllOfficersCache = async (req: Request, res: Response) => {
+    try {
+        const officers = await prisma.officer.findMany({
+            include: { iprs: true, station: true, role: true }, // Include IPRS_Person relationship
+            orderBy: { id: 'desc' },
+            
+        });
+        await redisClient.set('officers', JSON.stringify(officers));
+
+        res.json({
+            message: "All officers fetched successfully  cached",
             data: officers,
         });
     } catch (error) {

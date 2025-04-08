@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
     createOfficer,
     getAllOfficers,
+    getAllOfficersCache,
     getOfficerById,
     updateOfficer,
     deleteOfficer,
@@ -17,6 +18,7 @@ const OfficerRouter = Router();
 OfficerRouter.post("/",  createOfficer);
 OfficerRouter.post("/login", upload.none(), loginOfficer);
 OfficerRouter.get("/",  getAllOfficers);
+OfficerRouter.get("/cache",  getAllOfficersCache);
 OfficerRouter.get("/:id",  getOfficerById);
 OfficerRouter.put("/:id",  updateOfficer);
 OfficerRouter.delete("/:id",  deleteOfficer);
