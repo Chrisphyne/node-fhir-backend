@@ -6,6 +6,7 @@ import axios from "axios";
 const DutiesRouter = Router();
 
 DutiesRouter.post('/', async (req, res) => {
+ try {
     console.log(req.body, "req.body");
     const { ob_number, assigned_officer_id, narrative } = req.body;
     const duty = await prisma.officer.findFirst({
@@ -26,10 +27,15 @@ DutiesRouter.post('/', async (req, res) => {
 
     
     res.status(200).json({ message: 'Duty sent successfully' });
+ } catch (error) {
+    res.status(500).json({ message: 'Error sending duty' });
+    
+ }
 });
 
 DutiesRouter.get('/:id', async (req, res) => {
-   // hit ob microservice and get the obpdf
+ try {
+      // hit ob microservice and get the obpdf
    const obPdf = await axios.get(`https://internal-portal.virtualpolicestation.com/vps/abstract-number/${req.params.id}/view`,{
     responseType: 'arraybuffer' // Ensure we get the raw file data
   });
@@ -39,6 +45,11 @@ DutiesRouter.get('/:id', async (req, res) => {
 
   // the response i
   res.send(obPdf.data);
+    
+ } catch (error) {
+    res.status(500).json({ message: 'Error sending duty' });
+    
+ }
 });
 
 export { DutiesRouter };

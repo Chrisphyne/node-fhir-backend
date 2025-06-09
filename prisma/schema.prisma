@@ -84,7 +84,7 @@ model IPRS_Person {
   division_of_birth String?
   location_of_birth String?
   date_of_birth     DateTime
-  mug_shot          String? // Assuming the mug_shot field stores a file path
+  mug_shot          String? 
   Officer           Officer[]
 }
 
@@ -122,6 +122,7 @@ model Officer {
   Next_Of_Kin              Next_Of_Kin[]
   Health_Details           Health_Details[]
   Qualification_And_Skills Qualification_And_Skills[]
+  Biometrics               Biometrics[]
 }
 
 model Role {
@@ -204,4 +205,28 @@ model Qualification_And_Skills {
   officer    Officer  @relation(fields: [officerId], references: [id])
   created_at DateTime @default(now())
   officerId  Int
+}
+
+model Biometrics {
+  id             Int              @id @default(autoincrement())
+  
+  
+  officer        Officer          @relation(fields: [officerId], references: [id])
+  officerId      Int
+
+  left_index String?
+  left_middle String?
+  left_ring String?
+  left_pinky String?
+  left_thumb String?
+
+  right_index String?
+  right_middle String?
+  right_ring String?
+  right_pinky String?
+  right_thumb String?
+
+  profile_photo  String? 
+
+  submissionDate DateTime         @default(now())
 }

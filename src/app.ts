@@ -58,6 +58,7 @@ import NextOfKinRouter from './routes/v1/next_of_kin';
 import validateToken from './routes/v1/validate_token';
 import { socketsManager } from './service/sockets';
 import { DutiesRouter } from './routes/connection/duties';
+import { BiometricsRouter } from './routes/v1/biometrics';
 app.use(bodyParser.json({ limit: '50mb', type: 'application/json' }));              
 app.use(session({
   secret: "secret",
@@ -125,9 +126,10 @@ app.use('/api/v1/qualification_skills', QualificationAndSkillsRouter);
 app.use('/api/v1/next_of_kin', NextOfKinRouter);
 app.use('/validate-token',  validateToken);
 app.use('/send-duty', DutiesRouter);
+app.use('/api/v1/biometrics', BiometricsRouter);
 // app.use('/api/v1/rank', RanpmkRouter);
 
-
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 app.get('/uploads/:filename', (req, res) => {
   const filename = req.params.filename;
   res.sendFile(filename, { root: path.join('uploads') }); // serve files from uploads directory
