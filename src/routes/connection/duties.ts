@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { prisma } from "../../app";
-import { sendDuty } from "../../service/socket/officer";
+import { sendDuty } from "../../service/socket/user";
 import axios from "axios";
 
 const DutiesRouter = Router();

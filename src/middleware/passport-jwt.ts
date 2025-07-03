@@ -1,7 +1,6 @@
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import { prisma } from '../app';
 import { jwtConfig } from '../config/jwt.config';
-import { Officer } from '@prisma/client';
 
 const options = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -13,13 +12,13 @@ const options = {
 export const jwtStrategy = new JwtStrategy(options, async (payload, done) => {
   console.log(payload, "payload");
   try {
-    const officer = await prisma.officer.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: payload.sub }
     });
-    if (officer) {
+    if (user) {
       return done(null, {
-        ...officer,
-        id: officer.id.toString()
+        ...user,
+        id: user.id.toString()
       });
     }
     return done(null, false);
