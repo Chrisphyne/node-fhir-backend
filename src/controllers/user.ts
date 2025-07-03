@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
-import { prisma, JWTSecret } from "../app";
+import { prisma } from "../app";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { jwtConfig } from "../config/jwt.config";
 
 // Create User
 export const createUser = async (req: Request, res: Response) => {
@@ -119,9 +120,19 @@ export const loginUser = async (req: Request, res: Response) => {
     const validPassword = await bcrypt.compare(password, user.passwordHash);
     if (!validPassword) return res.status(401).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWTSecret, {
-      expiresIn: "1d",
-    });
+    const token = jwt.sign(
+      { 
+        sub: user.id, 
+        email: user.email, 
+        role: user.role 
+      }, 
+      jwtConfig.secret,
+      {
+        expiresIn: jwtConfig.expiresIn,
+        issuer: jwtConfig.issuer,
+        audience: jwtConfig.audience,
+      }
+    );
 
     // Update last login
     await prisma.user.update({

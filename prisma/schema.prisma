@@ -188,18 +188,30 @@ model PatientOrganization {
   @@map("patient_organizations")
 }
 
+enum StaffPosition {
+  RECEPTIONIST
+  TECHNICIAN
+  ADMINISTRATOR
+}
+
+enum StaffStatus {
+  ACTIVE
+  INACTIVE
+  TERMINATED
+}
+
 // Staff members (non-practitioners)
 model Staff {
   id             String   @id @default(cuid())
   employeeId     String   @unique
   name           Json     // FHIR HumanName
-  position       String   // "receptionist", "technician", "administrator", etc.
+  position       StaffPosition
   department     String?
   email          String?
   phone          String?
   address        Json?
   hireDate       DateTime
-  status         String   @default("active") // "active", "inactive", "terminated"
+  status         StaffStatus
   organizationId String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt

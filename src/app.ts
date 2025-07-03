@@ -7,8 +7,8 @@ export var forms = multer({
   dest: 'upload/',
 });
 import {PrismaClient } from '@prisma/client';
-const passport = require('passport')
-require('./middleware/passport')
+import passport from "./routes/auth/passport"; // 👈 This is key
+require('./middleware/passport-jwt')
 export const prisma = new PrismaClient()
 
 export const saltRounds = 10;
@@ -38,7 +38,17 @@ import { home } from './routes/home';
 // import { loginRouter } from './routes/auth/login';
 import path from 'path';
 
+// Initialize passport
+app.use(passport.initialize()); // 👈 Must come before routes that use it
+
+
 import userRouter from './routes/v1/user';
+import organizationRouter from './routes/v1/organization';
+import userOrganizationAccessRouter from './routes/v1/userOrganizationAccess';
+import staffRouter from './routes/v1/staff';
+import patientRouter from './routes/v1/patient';
+import patientOrganizationRouter from './routes/v1/patientOrganization';
+import equipmentRouter from './routes/v1/equipment';
 // import { socketsManager } from './service/sockets';
 
 app.use(bodyParser.json({ limit: '50mb', type: 'application/json' }));              
@@ -91,7 +101,13 @@ export const io = new Server(server, {
 // routes
   app.use('/', home);
   app.use('/api/v1/user', userRouter);
-// app.use('/api/v1/applications', ApplicationsDataRouter);
+  app.use('/api/v1/organization', organizationRouter);
+  app.use('/api/v1/userOrganizationAccess', userOrganizationAccessRouter);
+  app.use('/api/v1/staff', staffRouter);
+  app.use('/api/v1/patient', patientRouter);
+  app.use('/api/v1/patientOrganization', patientOrganizationRouter);
+  app.use('/api/v1/equipment', equipmentRouter);
+  // app.use('/api/v1/applications', ApplicationsDataRouter);
 
 // app.use('/api/v1/rank', RanpmkRouter);
 
@@ -101,7 +117,6 @@ app.get('/uploads/:filename', (req, res) => {
   res.sendFile(filename, { root: path.join('uploads') }); // serve files from uploads directory
 });
 
-export const JWTSecret = "secret"
 // socketsManager()
 // app.use('/product', product)
 
