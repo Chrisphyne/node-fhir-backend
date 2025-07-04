@@ -22,6 +22,7 @@ model User {
   passwordHash          String
   role                  Role   
   primaryOrganizationId String?
+  primaryOrganization   Organization? @relation(fields: [primaryOrganizationId], references: [id])
   active                Boolean  @default(true)
   lastLogin             DateTime?
   createdAt             DateTime @default(now())
@@ -67,6 +68,7 @@ model Organization {
   updatedAt   DateTime @updatedAt
 
   // Relationships
+  users                User[]              // Users who have this as their primary organization
   userAccess           UserOrganizationAccess[]
   practitioners        PractitionerOrganization[]
   patients             PatientOrganization[]

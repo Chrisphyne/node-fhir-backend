@@ -41,7 +41,11 @@ export const createUser = async (req: Request, res: Response) => {
 export const getAllUsers = async (_req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany({
-      include: { organizationAccess: true, auditLogs: true },
+      include: { 
+        organizationAccess: true, 
+        auditLogs: true,
+        primaryOrganization: true // Include primary organization details
+      },
       orderBy: { createdAt: "desc" },
     });
 

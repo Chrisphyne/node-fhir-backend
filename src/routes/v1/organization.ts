@@ -10,12 +10,12 @@ import passport from "../../routes/auth/passport";
 
 const router = express.Router();
 
-  
+// router.use(passport.authenticate("jwt", { session: false }));
 
-router.post("/", passport.authenticate("jwt", { session: false }), createOrganization);
-router.get("/", passport.authenticate("jwt", { session: false }), getAllOrganizations);
-router.get("/:id", passport.authenticate("jwt", { session: false }), getOrganizationById);
-router.put("/:id", passport.authenticate("jwt", { session: false }), updateOrganization);
-router.delete("/:id", passport.authenticate("jwt", { session: false }), deleteOrganization);
+router.post("/", createOrganization);
+router.get("/",  getAllOrganizations);
+router.get("/:id",  getOrganizationById);
+router.put("/:id", updateOrganization);
+router.delete("/:id",  deleteOrganization);
 
 export default router;
